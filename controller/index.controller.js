@@ -1,3 +1,5 @@
+const axios = require('axios')
+
 class Index {
   async home(ctx, next) {
     ctx.body = 'home page'
@@ -13,6 +15,16 @@ class Index {
     } catch (e) {
       throw ({ code: -2, message: e.message })
     }
+  }
+  async getRemoteData(ctx, next) {
+    await axios.get('https://yunmk.feidee.net/cab-market-ws/market/v1/template/home?page_code=accountbook').then((res) => {
+      console.log(res.data.data)
+      ctx.body = {
+        code: 0,
+        result: res.data.data,
+        message: 'succeed'
+      }
+    })
   }
   async render(ctx, next) {
     await ctx.render('index', {

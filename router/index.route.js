@@ -3,9 +3,10 @@ const { koaBody } = require('koa-body') // post参数解析
 const path = require('path')
 
 const router = new Router({ prefix: '' })
-const { home, foo, bar, render, upload } = require('../controller/index.controller')
+const { home, getRemoteData, foo, bar, render, upload } = require('../controller/index.controller')
 
 router.get('/', home)
+router.get('/getRemoteData', getRemoteData)
 router.get('/foo', foo)
 router.get('/bar', bar)
 router.get('/render', render)
