@@ -19,7 +19,7 @@ class Index {
   async getRemoteData(ctx, next) {
     await axios
       .get(
-        "https://yunmk.feidee.net/cab-market-ws/market/v1/template/home?page_code=accountbook"
+        "https://yunmk.feidee.net/cab-market-ws/market/v1/template/home?page_code=accountbook",
       )
       .then((res) => {
         console.log(res.data.data);
@@ -36,6 +36,14 @@ class Index {
       sex: "male",
       list: ["number1", "number2"],
     });
+  }
+  async collectCrashReport(ctx, next) {
+    const data = ctx.request.body; // 参数结构{crash: 1111}
+    ctx.body = {
+      code: 0,
+      result: data.crash,
+      message: "接收crash数据",
+    };
   }
   async upload(ctx, next) {
     try {

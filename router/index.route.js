@@ -10,6 +10,7 @@ const {
   bar,
   render,
   upload,
+  collectCrashReport,
 } = require("../controller/index.controller");
 
 router.get("/", home);
@@ -17,6 +18,7 @@ router.get("/getRemoteData", getRemoteData);
 router.get("/foo", foo);
 router.get("/bar", bar);
 router.get("/render", render);
+router.post("/collectCrashReport", koaBody(), collectCrashReport);
 router.post(
   "/upload",
   koaBody({
@@ -26,7 +28,6 @@ router.post(
       keepExtensions: true, // 保留上传文件的原始扩展名
     },
   }),
-  upload
+  upload,
 );
-
 module.exports = router;
