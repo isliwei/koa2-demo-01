@@ -29,6 +29,9 @@ importers:
       koa-body:
         specifier: ^6.0.1
         version: 6.0.1
+      koa-cors:
+        specifier: ^0.0.16
+        version: 0.0.16
       koa-mount:
         specifier: ^4.0.0
         version: 4.2.0
@@ -639,6 +642,9 @@ packages:
   koa-convert@2.0.0:
     resolution: {integrity: sha512-asOvN6bFlSnxewce2e/DK3p4tltyfC4VM7ZwuTuepI7dEQVcvpyFuBcEARu1+Hxg8DIwytce2n7jrZtRlPrARA==}
     engines: {node: '>= 10'}
+
+  koa-cors@0.0.16:
+    resolution: {integrity: sha512-s15knPxe3AJBi2I/ZMPL0pSqU+PLYLO6k5tI0AqClkzavowvocPlSdFUwaHNqtjHMhsGmiq2tiX/25iILJx9YA==}
 
   koa-mount@4.2.0:
     resolution: {integrity: sha512-2iHQc7vbA9qLeVq5gKAYh3m5DOMMlMfIKjW/REPAS18Mf63daCJHHVXY9nbu7ivrnYn5PiPC4CE523Tf5qvjeQ==}
@@ -1681,6 +1687,8 @@ snapshots:
     dependencies:
       co: 4.6.0
       koa-compose: 4.1.0
+
+  koa-cors@0.0.16: {}
 
   koa-mount@4.2.0:
     dependencies:

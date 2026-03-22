@@ -11,6 +11,8 @@ const {
   render,
   upload,
   collectCrashReport,
+  chatStream,
+  chatStreamFetch,
 } = require("../controller/index.controller");
 
 router.get("/", home);
@@ -19,6 +21,8 @@ router.get("/foo", foo);
 router.get("/bar", bar);
 router.get("/render", render);
 router.post("/collectCrashReport", koaBody(), collectCrashReport);
+router.get("/stream", chatStream);
+router.get("/streamFetch", chatStreamFetch);
 router.post(
   "/upload",
   koaBody({
