@@ -1,5 +1,6 @@
 const axios = require("axios");
-
+let connectionCount = 0;
+const FAILURE_THRESHOLD = 3;
 class Index {
   async home(ctx, next) {
     ctx.body = "home page";
@@ -38,7 +39,7 @@ class Index {
     });
   }
   async collectCrashReport(ctx, next) {
-    const data = ctx.request.body; // 参数结构{crash: 1111}
+    const data = ctx.request.body;
     ctx.body = {
       code: 0,
       result: data.crash,
@@ -78,9 +79,18 @@ class Index {
     ctx.res.end();
   }
   async chatStreamFetch(ctx, next) {
+    const { retry } = ctx.query;
+    if (retry) {
+      console.log(`重试消息：${retry}`);
+    }
     const sleep = (ms) => {
       return new Promise((r) => setTimeout(r, ms));
     };
+
+    const send = (data) => {
+      ctx.res.write(JSON.stringify(data) + "\n");
+    };
+
     ctx.set({
       "Content-Type": "application/x-ndjson",
       "Cache-Control": "no-cache",
@@ -90,55 +100,134 @@ class Index {
 
     ctx.status = 200;
 
-    // 消息 1: 文本
-    ctx.res.write(
-      JSON.stringify({
-        type: "text",
-        content: "这是一条文本消息，",
-      }) + "\n",
-    );
-    await sleep(500);
+    // ============ 模拟前 3 次连接失败 ============
+    connectionCount += 1;
+    console.log(`第 ${connectionCount} 次连接请求`);
 
-    // 消息 2: 继续文本
-    ctx.res.write(
-      JSON.stringify({
-        type: "text",
-        content: "这是后续内容。",
-      }) + "\n",
-    );
-    await sleep(500);
+    if (connectionCount <= FAILURE_THRESHOLD) {
+      // 前 3 次直接返回错误
+      console.log(`模拟连接失败 ${connectionCount}/${FAILURE_THRESHOLD}`);
+      ctx.status = 500;
+      ctx.res.write(
+        JSON.stringify({
+          type: "system",
+          event: "connection_failed",
+          data: {
+            attempt: connectionCount,
+            message: `连接失败 (${connectionCount}/${FAILURE_THRESHOLD})`,
+          },
+        }) + "\n",
+      );
+      ctx.res.end();
+      return;
+    }
 
-    // 消息 3: 图片
-    ctx.res.write(
-      JSON.stringify({
+    // ============ 第 4 次及以后正常连接 ============
+    console.log("连接成功，开始推送消息");
+
+    // 重置计数器（可选，用于下次测试）
+    connectionCount = 0;
+
+    try {
+      // ============ 阶段 1: 思考中 ============
+      send({
+        type: "system",
+        event: "status_change",
+        data: {
+          status: "thinking",
+          message: "正在理解您的问题...",
+        },
+      });
+      await sleep(800);
+
+      // ============ 阶段 2: 生成中 - 创建消息 ============
+      const messageId = `msg_${Date.now()}`;
+
+      send({
+        type: "text",
+        id: messageId,
+        status: "generating",
+        content: "",
+      });
+      await sleep(500);
+
+      // ============ 阶段 3: 流式追加文本内容 ============
+      const textChunks = [
+        "这是一条文本消息，",
+        "这是后续内容。",
+        "支持流式追加显示。",
+      ];
+
+      for (const chunk of textChunks) {
+        send({
+          type: "text",
+          id: messageId,
+          status: "generating",
+          content: chunk,
+          append: true,
+        });
+        await sleep(500);
+      }
+
+      // ============ 阶段 4: 消息完成 ============
+      send({
+        type: "text",
+        id: messageId,
+        status: "completed",
+      });
+      await sleep(300);
+
+      // ============ 阶段 5: 图片消息 ============
+      const imageId = `msg_${Date.now()}`;
+
+      send({
         type: "image",
-        url: "https://p3-sign.toutiaoimg.com/tos-cn-i-ezhpy3drpa/53ba8181edf64cdb849c20973c4f43c3~tplv-tt-origin-web:gif.jpeg?_iz=58558&from=article.pc_detail&lk3s=953192f4&x-expires=1774784978&x-signature=nOQEC7YVbBR2XKrMZwUoITj37yE%3D",
-        alt: "示例图片",
-      }) + "\n",
-    );
-    await sleep(500);
+        id: imageId,
+        status: "generating",
+      });
+      await sleep(500);
 
-    // 消息 4: 卡片
-    ctx.res.write(
-      JSON.stringify({
+      send({
+        type: "image",
+        id: imageId,
+        status: "completed",
+        url: "https://cdn-v1.cnhis.com/esb-bizfile/5545/common/5/20260323/upload-14985979783527892524Snipaste_2025-07-31_10-55-08.png",
+        alt: "示例图片",
+      });
+      await sleep(300);
+
+      // ============ 阶段 6: 卡片消息 ============
+      send({
         type: "card",
+        id: `msg_${Date.now()}`,
+        status: "completed",
         title: "卡片标题",
         description: "卡片描述内容",
         link: "https://www.toutiao.com/article/7617463264179405327",
-      }) + "\n",
-    );
-    await sleep(500);
+      });
+      await sleep(300);
 
-    // 消息 5: 结束事件
-    ctx.res.write(
-      JSON.stringify({
+      // ============ 阶段 7: 流结束 ============
+      send({
         type: "system",
         event: "stream_end",
-        data: { timestamp: Date.now() },
-      }) + "\n",
-    );
+        data: {
+          timestamp: Date.now(),
+          totalMessages: 4,
+        },
+      });
 
-    ctx.res.end();
+      ctx.res.end();
+    } catch (err) {
+      send({
+        type: "system",
+        event: "stream_error",
+        data: {
+          message: err instanceof Error ? err.message : String(err),
+        },
+      });
+      ctx.res.end();
+    }
   }
   async upload(ctx, next) {
     try {
