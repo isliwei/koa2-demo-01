@@ -8,6 +8,7 @@ const cors = require("koa-cors"); // 跨域
 // const compose = require('koa-jwt') // jwt鉴权
 const indexRouter = require("./router/index.route");
 const usersRouter = require("./router/user.route");
+const fileRouter = require("./router/strongFile.route");
 
 const app = new Koa();
 
@@ -42,8 +43,10 @@ app
   .use(mount("/static", static(path.join(__dirname, "./file"))))
   .use(indexRouter.routes()) // 首页路由
   .use(usersRouter.routes()) // 用户路由
+  .use(fileRouter.routes()) // 文件路由
   .use(indexRouter.allowedMethods())
   .use(usersRouter.allowedMethods())
+  .use(fileRouter.allowedMethods())
   .use(h);
 
 const server = app.listen("3000", () => {
